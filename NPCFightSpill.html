@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fight game!</title>
+    <style>
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+    body {
+            
+        height: 100vh;
+        background-color: rgb(39, 41, 68);
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+    #app {
+        
+        margin-left: 50px;
+        margin-top: 50px;
+        color: rgb(214, 214, 214);
+        align-items: center;
+        justify-content: center;
+        
+    }
+    #playerAction {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        font-size: 25px;
+    }
+    #computerAction {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        font-size: 25px;
+    }
+    button {
+    width: 150px;
+    height: 50px;
+    background: none;
+    color: rgb(214, 214, 214);
+    font-size: 20px;
+    background-color: rgb(45, 117, 96);
+    border-radius: 3px;
+    cursor: pointer;
+    
+    }
+    button:disabled {
+    background-color: rgb(52, 95, 82);
+    }
+
+    .resultW {
+        color: yellow;
+        font-size: 30px;
+        font-weight: bold;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        text-shadow: 2px 0 0 #000, -2px 0 0#000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    }
+    .resultL {
+        color: red;
+        font-size: 30px;
+        font-weight: bold;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        text-shadow: 2px 0 0 #000, -2px 0 0#000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+    // model
+    let playerHp = 100;
+    let compHp = 150;
+    let playerAtk = 10;
+    let compAtk = 25;
+    let playerFeedback = '';
+    let compFeedback = '';
+    let playerAction;
+    let playerDamage;
+    let compDamage;
+    let compStatus;
+    let checkIfDead = false;
+    
+    // view
+    function updateView() {
+        winState()
+        let defaultBtns = checkIfDead == true ? 'disabled':'';
+        document.getElementById('app').innerHTML = `
+            <h1>Your health ${playerHp}</h1> 
+            <h1>Enemy health ${compHp}</h1>
+            <button ${defaultBtns} class="btn" id="btn1" onclick='attack()'>Attack</button>
+            <button ${defaultBtns} class="btn" id="btn2" onclick='heal()'>Heal</button>
+            <button ${defaultBtns} class="btn" id="btn3" onclick='buff()'>Strengthen</button>
+            <button ${defaultBtns} class="btn" id="btn4" onclick='parry()'>Parry</button>
+            ${playerFeedback}
+            ${compFeedback}
+            
+        `;
+        
+    }
+
+    // controller
+    startGame();
+    function startGame() {
+        checkIfDead = false
+        playerHp = 100;
+        compHp = 150;
+        playerAtk = 10;
+        compAtk = 25;
+        playerFeedback = '';
+        compFeedback = '';
+        compStatus = '';
+
+        updateView();
+    }
+    function winState() {
+    if (compHp < 0) {
+            compHp = 0;
+            playerFeedback = `<div id="playerAction">You dealt <u>${playerDamage} damage</u></div>`
+            compFeedback = `<div class="resultW" id="computerAction">You win!</div>
+            <button onclick='startGame()'>Restart Game</button>
+                `
+                checkIfDead=true
+                ;
+        }
+    else if (playerHp < 0) {
+        playerHp = 0;
+        playerFeedback = `<div class="resultL" id="playerAction">You were defeated!</div>`
+        compFeedback = `<div id="computerAction">The enemy did <u>${compDamage} damage to you</u></div>
+        <button onclick='startGame()'>Restart Game</button>
+            `
+            checkIfDead=true
+            ;
+        }
+    };
+     function heal() {
+        let playerHeal;
+         playerAction = 'heal'
+         playerHeal = playerAtk;
+         playerHp = playerHp + playerHeal;
+         playerFeedback = `<div id="playerAction">You healed yourself ${playerHeal} health</div>`;
+         comp();
+     }
+     function parry() {
+        playerAction = 'parry'
+        comp()
+     }
+     function buff() {
+         playerAction = 'buff'
+         playerAtk = playerAtk + 2;
+         console.log(playerAtk)
+         comp();
+     }
+
+    function attack() {
+        playerAction = 'attack'
+        playerDamage =  Math.floor(Math.random() * playerAtk);
+        if (playerDamage == 0 || compStatus == 'parried') {
+            playerDamage = playerAtk * 2;
+            compHp = compHp - playerDamage;
+            console.log('in if')
+            playerFeedback = `<div id="playerAction">You dealt ${playerDamage} damage</div>`;
+            
+        }
+        else {
+            console.log(compHp, 'i else')
+            compHp = compHp - playerDamage;
+            console.log('in else')
+            playerFeedback = `<div id="playerAction">You dealt ${playerDamage} damage</div>`;
+        }
+        comp();
+    };
+    function comp() {
+        let compAction;
+        if (compStatus == 'parried') {
+            compStatus = ''
+            updateView();
+        }
+        else if (compHp > 0) {
+           compAction = Math.floor(Math.random() * 5);
+           if (compHp <= 30) {
+               compHeal()
+           }
+           else if (compAction == 0) {
+               compHeal()
+           }
+           else if (compAction == 1) {
+               compBlock();
+           }
+           else {
+               compAttack();
+           };
+        }
+        else {
+            updateView()
+        };
+
+        
+        
+    };
+    function compAttack() {
+        if (playerAction == 'parry'){
+            compDamage = Math.floor(Math.random() * compAtk - 15);
+            if (compDamage <= 0) {
+               compFeedback = `<div id="computerAction">The enemy was parried!</div>`;
+               compStatus = 'parried'
+            }
+            else {
+                compFeedback = `<div id="computerAction">The enemy did ${compDamage} damage to you</div>`;
+                playerHp = playerHp - compDamage;
+            };
+        }
+        else {compDamage = Math.floor(Math.random() * compAtk);
+            if (compDamage == 0) {
+               compFeedback = `<div id="computerAction">The enemy missed!</div>`;
+            }
+            else {
+                compFeedback = `<div id="computerAction">The enemy did ${compDamage} damage to you</div>`;
+              playerHp = playerHp - compDamage;
+        }};
+        updateView();
+    };
+    function compBlock() {
+        if (playerAction == 'attack') {
+            compHp = compHp + playerDamage;
+            compFeedback = `<div id="computerAction">The enemy blocked your attack!</div>`;
+            playerFeedback = `<div id="playerAction">You dealt 0 damage</div>`;
+        };
+        updateView();
+    };
+    function compHeal() {
+        if (compHp <= 30) {
+            compHp = 100;
+            compFeedback = `<div id="computerAction">Too weak! The enemy is rejuvenated!</div>`
+        }
+        else {
+            let compHealing;
+            compHealing = Math.floor(Math.random() * compAtk);
+            compHp = compHp + compHealing;
+            compFeedback = `<div id="computerAction">The enemy healed for ${compHealing} health!</div>`
+        };
+        updateView();
+    }
+    
+</script>
+
+
+</body>
+</html>
